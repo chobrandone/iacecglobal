@@ -274,5 +274,5 @@ export const defaultSettings: SiteSettings = {
   announcementEnabled: false,
   announcementText: '',
   announcementLink: { label: '', href: '' },
-  notificationEmail: 'info@iacecglobal.com',
+  notificationEmail: 'admin@iacecglobal.com',
 };
