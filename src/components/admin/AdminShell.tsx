@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { logout } from '@/app/admin/_actions/admin';
 import { cn } from '@/lib/utils';
-import { Emblem } from '@/components/site/Logo';
 
 const icons = { LayoutDashboard, FileText, Library, Images, Inbox, ClipboardList, Mail, Settings, Users, UserRound };
 export type NavItem = { href: string; label: string; icon: keyof typeof icons };
@@ -35,12 +34,10 @@ export function AdminShell({ nav, user, children }: { nav: NavItem[]; user: { na
 
   const sidebar = (
     <nav className="flex h-full flex-col bg-navy text-white" aria-label="Admin">
-      <div className="flex items-center gap-3 px-5 py-5">
-        <Emblem className="h-9 w-9 text-white" />
-        <div>
-          <p className="font-heading text-base font-extrabold tracking-[0.2em]">IACEC</p>
-          <p className="text-[0.7rem] text-white/50">Website admin</p>
-        </div>
+      <div className="px-5 py-5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/media/brand/iacec-logo-light.png" alt="IACEC" className="h-14 w-auto" />
+        <p className="mt-2 text-[0.7rem] text-white/50">Website admin</p>
       </div>
       <ul className="flex-1 space-y-0.5 overflow-y-auto px-3">
         {nav.map((item) => {
@@ -80,10 +77,8 @@ export function AdminShell({ nav, user, children }: { nav: NavItem[]; user: { na
     <div className="lg:pl-64">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 lg:block">{sidebar}</aside>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-navy/10 bg-white px-4 py-3 lg:hidden">
-        <span className="flex items-center gap-2 text-navy">
-          <Emblem className="h-8 w-8" />
-          <span className="font-heading font-extrabold tracking-[0.2em]">IACEC</span>
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/media/brand/iacec-logo.png" alt="IACEC" className="h-8 w-auto" />
         <button type="button" onClick={() => setOpen(true)} aria-label="Open menu" className="rounded-lg border border-navy/15 p-2 text-navy">
           <Menu className="h-5 w-5" />
         </button>

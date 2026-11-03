@@ -29,20 +29,26 @@ export function Logo({
   className?: string;
 }) {
   const light = tone === 'light';
+  // An uploaded logo is the complete lockup (emblem + wordmark), so it is shown on its own.
+  if (image?.src) {
+    return (
+      <span className={cn('inline-flex items-center', className)}>
+        <Image
+          src={image.src}
+          alt={image.alt || name}
+          width={light ? 1031 : 1066}
+          height={light ? 360 : 240}
+          priority={!light}
+          sizes={light ? '260px' : '220px'}
+          className={light ? 'h-20 w-auto sm:h-[5.5rem]' : 'h-10 w-auto sm:h-12'}
+        />
+      </span>
+    );
+  }
   return (
     <span className={cn('inline-flex items-center gap-3', className)}>
       <span className={light ? 'text-white' : 'text-navy'}>
-        {image?.src ? (
-          <Image
-            src={image.src}
-            alt={image.alt || ''}
-            width={44}
-            height={44}
-            className="h-10 w-10 object-contain sm:h-11 sm:w-11"
-          />
-        ) : (
-          <Emblem className="h-10 w-10 sm:h-11 sm:w-11" />
-        )}
+        <Emblem className="h-10 w-10 sm:h-11 sm:w-11" />
       </span>
       <span className="flex flex-col leading-none">
         <span

@@ -74,6 +74,23 @@ async function main() {
     });
   }
 
+  // Logo files (public/media/brand, built by scripts/make-logo.mjs)
+  const brand = [
+    { file: 'iacec-logo.png', alt: 'IACEC — Innovation Association for Christian Educators' },
+    { file: 'iacec-logo-full.png', alt: 'IACEC — Raising a God-loving generation.' },
+    { file: 'iacec-logo-light.png', alt: 'IACEC — Raising a God-loving generation. (white version)' },
+    { file: 'iacec-emblem.png', alt: 'IACEC emblem' },
+  ];
+  for (const b of brand) {
+    const file = path.join(process.cwd(), 'public', 'media', 'brand', b.file);
+    if (!existsSync(file)) continue;
+    await prisma.media.upsert({
+      where: { key: `seed/brand/${b.file}` },
+      create: { key: `seed/brand/${b.file}`, url: `/media/brand/${b.file}`, filename: b.file, mimeType: 'image/png', size: statSync(file).size, alt: b.alt },
+      update: {},
+    });
+  }
+
   // Pages and sections
   if (reset || (await prisma.page.count()) === 0) {
     for (const page of seedPages) {

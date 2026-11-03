@@ -135,6 +135,11 @@ Tailwind defaults: `sm 640`, `md 768`, `lg 1024`, `xl 1280`. Desktop nav appears
 10. **Form behaviour** is copied from the live bundle: client-side validation messages ("This field is required.",
     "Please confirm to continue.", "Please enter a valid email address."), the "Sending…" state, the gold success card with
     "Send another", and the error text "We could not send this just now. Please try again, or email us directly at info@iacecglobal.com."
+12. **Logo (client-supplied, replaces the reference emblem).** The master artwork is `assets/iacec-logo-source.webp`;
+    `node scripts/make-logo.mjs assets/iacec-logo-source.webp` builds `public/media/brand/`: `iacec-logo.png` (emblem +
+    wordmark, header and mobile menu, 40–48 px tall), `iacec-logo-light.png` (white/gold with tagline, navy footer),
+    `iacec-logo-full.png` (full colour with tagline) and `iacec-emblem.png` (favicon). All are set in Site settings → Identity
+    and can be swapped in the admin. With no logo set, the original drawn emblem and text wordmark are used.
 11. **Hidden-when-empty sections.** The live home page has an "impact figures" block and the About page a "Leadership"
     block that only render when data exists. Here the About page has a Team section and the home page a Testimonies
     section, both hidden until items are published/approved, so the pages look identical today.
