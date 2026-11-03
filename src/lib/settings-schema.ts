@@ -84,7 +84,11 @@ export const settingsFields: { title: string; fields: Field[] }[] = [
       f.text('defaultTitle', 'Default page title'),
       f.text('titleSuffix', 'Title suffix', { help: 'Appended to page titles, e.g. " — IACEC"' }),
       f.textarea('defaultDescription', 'Default meta description', 3),
+      f.textarea('defaultKeywords', 'Default keywords', 2, { help: 'Separated by commas. Used on pages with no keywords of their own.' }),
       f.image('ogImage', 'Default social sharing image'),
+      f.text('googleSiteVerification', 'Google Search Console verification code', {
+        help: 'Paste only the content value from the HTML tag method in Search Console.',
+      }),
     ],
   },
   {
@@ -150,7 +154,9 @@ export type SiteSettings = {
   defaultTitle: string;
   titleSuffix: string;
   defaultDescription: string;
+  defaultKeywords: string;
   ogImage: ImageValue;
+  googleSiteVerification: string;
   announcementEnabled: boolean;
   announcementText: string;
   announcementLink: LinkValue;
@@ -261,7 +267,10 @@ export const defaultSettings: SiteSettings = {
   titleSuffix: ' — IACEC',
   defaultDescription:
     'The Innovation Association for Christian Educators (IACEC) is a Christian association based in Douala, Cameroon, equipping teachers, parents and caretakers to teach and live Christ before children.',
+  defaultKeywords:
+    'IACEC, Innovation Association for Christian Educators, Christian education Cameroon, Christian teacher training, biblical integration, Christian educators Douala, child sponsorship Cameroon',
   ogImage: empty,
+  googleSiteVerification: '',
   announcementEnabled: false,
   announcementText: '',
   announcementLink: { label: '', href: '' },

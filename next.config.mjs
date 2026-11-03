@@ -1,9 +1,7 @@
-import type { NextConfig } from 'next';
-
-const remotePatterns: NonNullable<NextConfig['images']>['remotePatterns'] = [];
+const remotePatterns = [];
 if (process.env.S3_PUBLIC_URL) {
   const u = new URL(process.env.S3_PUBLIC_URL);
-  remotePatterns.push({ protocol: u.protocol.replace(':', '') as 'https' | 'http', hostname: u.hostname, pathname: `${u.pathname.replace(/\/$/, '')}/**` });
+  remotePatterns.push({ protocol: u.protocol.replace(':', ''), hostname: u.hostname, pathname: `${u.pathname.replace(/\/$/, '')}/**` });
 }
 
 const securityHeaders = [
@@ -14,7 +12,8 @@ const securityHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
 ];
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   poweredByHeader: false,
   images: {
     formats: ['image/avif', 'image/webp'],

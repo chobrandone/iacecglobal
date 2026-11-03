@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { getPage, getProgramme, getSettings } from '@/lib/content';
-import { pageMetadata } from '@/lib/seo';
+import { breadcrumbJsonLd, pageMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/site/JsonLd';
 import { pillarLabels } from '@/components/site/Cards';
 import { PageHero } from '@/sections/common';
 import { Sections } from '@/sections/render';
@@ -27,10 +28,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProgrammePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [programme, template] = await Promise.all([getProgramme(slug), getPage('templates/programme')]);
+  const [programme, template, s] = await Promise.all([getProgramme(slug), getPage('templates/programme'), getSettings()]);
   if (!programme) notFound();
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd(s, [
+          { name: 'Programmes', path: '/programmes' },
+          { name: programme.title, path: `/programmes/${slug}` },
+        ])}
+      />
       <PageHero
         c={{
           variant: 'split',

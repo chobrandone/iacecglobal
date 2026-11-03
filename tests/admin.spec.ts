@@ -32,6 +32,50 @@ async function save(page: Page) {
 test.describe('admin', () => {
   test.skip(!email || !password, 'Set ADMIN_EMAIL and ADMIN_PASSWORD to run admin tests');
 
+  test('large photos are shrunk before upload and large PDFs are refused', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/admin/media');
+    const input = page.locator('input[type="file"][multiple]');
+
+    // Random pixels barely compress, so this PNG is far over the 4 MB limit.
+    const png = await page.evaluate(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 3000;
+      canvas.height = 2000;
+      const ctx = canvas.getContext('2d')!;
+      const img = ctx.createImageData(3000, 2000);
+      const chunk = new Uint8Array(65536);
+      for (let i = 0; i < img.data.length; i += 65536) {
+        crypto.getRandomValues(chunk);
+        img.data.set(chunk.subarray(0, Math.min(65536, img.data.length - i)), i);
+      }
+      for (let i = 3; i < img.data.length; i += 4) img.data[i] = 255;
+      ctx.putImageData(img, 0, 0);
+      return canvas.toDataURL('image/png').split(',')[1];
+    });
+    const buffer = Buffer.from(png, 'base64');
+    expect(buffer.length).toBeGreaterThan(4 * 1024 * 1024);
+
+    const name = `e2e-large-${Date.now()}.png`;
+    const response = page.waitForResponse((r) => r.url().includes('/api/admin/media') && r.request().method() === 'POST');
+    await input.setInputFiles({ name, mimeType: 'image/png', buffer });
+    const res = await response;
+    expect(res.status()).toBe(200);
+    const media = await res.json();
+    expect(media.mimeType).toBe('image/webp');
+    expect(media.width).toBe(2400);
+    expect(media.size).toBeLessThanOrEqual(4 * 1024 * 1024);
+    await expect(page.getByText(`Uploaded ${name}`)).toBeVisible();
+
+    await input.setInputFiles({ name: 'e2e-large.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(5 * 1024 * 1024) });
+    await expect(page.getByText('e2e-large.pdf: Files must be 4 MB or smaller.')).toBeVisible();
+
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: media.filename }).click();
+    await page.getByRole('button', { name: 'Delete' }).click();
+    await expect(page.getByText('Deleted')).toBeVisible();
+  });
+
   test('unauthenticated visitors are sent to the login page', async ({ page }) => {
     await page.goto('/admin/pages');
     await expect(page).toHaveURL(/\/admin\/login/);

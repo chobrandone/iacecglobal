@@ -13,6 +13,7 @@ export default async function SubscribersPage() {
         title="Newsletter subscribers"
         description={`${subs.length} people have joined the mailing list.`}
         actions={
+          // eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page
           <a href="/api/admin/subscribers/export">
             <Button variant="outline">
               <Download className="h-4 w-4" /> Export CSV (Excel)

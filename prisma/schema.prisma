@@ -49,6 +49,7 @@ model Page {
   title           String
   seoTitle        String?
   metaDescription String?
+  keywords        String?
   ogImage         String?
   published       Boolean   @default(true)
   isTemplate      Boolean   @default(false) // detail-page templates (programme, news article)

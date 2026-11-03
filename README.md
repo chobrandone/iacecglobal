@@ -61,7 +61,24 @@ All variables are documented in [`.env.example`](.env.example). Summary:
 
 Sign in as an administrator → **Users → Invite someone**. To create one from the command line instead, set `ADMIN_EMAIL` / `ADMIN_PASSWORD` to the new account and run `npm run db:seed` again (it only creates the user if that email does not exist yet).
 
-## 3. Deploying to Vercel
+## 3. Deploying to Hostinger
+
+Needs a plan with Node.js Web Apps (Business Web Hosting or Cloud). In hPanel choose **Websites → Add website → Node.js Apps**, then connect this GitHub repository.
+
+| Setting | Value |
+| --- | --- |
+| Framework | Next.js |
+| Root directory | `/` |
+| Node.js version | 22 |
+| Package manager | npm |
+| Build command | `npm run build` |
+| Output directory | `.next` |
+
+Add the variables from `.env.example` in the app's environment settings. `DATABASE_URL` must be a PostgreSQL database, and uploads need S3-compatible storage because files saved on the server are lost on redeploy. Set up the database once from your computer, as in step 6 below.
+
+If you upload an archive instead of using GitHub, `package.json` must be at the top level of the archive, and `node_modules`, `.next` and `.git` must be left out. `git archive -o iacec.zip HEAD` builds a correct one.
+
+## 4. Deploying to Vercel
 
 1. Push this repository to GitHub and import it in Vercel (framework: Next.js; build command `npm run build` is detected).
 2. Create a Postgres database (Vercel Postgres / Neon / Supabase) and copy its connection string into `DATABASE_URL`.
@@ -81,7 +98,7 @@ Sign in as an administrator → **Users → Invite someone**. To create one from
 
 In Vercel → **Settings → Domains**, add `iacecglobal.com` and `www.iacecglobal.com`. At your domain registrar, create the records Vercel shows (usually an `A` record for the apex pointing to `76.76.21.21` and a `CNAME` for `www` pointing to `cname.vercel-dns.com`). Choose `iacecglobal.com` as the primary domain so `www` redirects to it. HTTPS certificates are issued automatically.
 
-## 4. Project structure
+## 5. Project structure
 
 ```
 prisma/                 schema, migrations, seed + seed-data (verbatim live content)
@@ -99,7 +116,7 @@ tests/                  Playwright: visual parity, site, forms, admin
 
 How content works: a **Page** has ordered **Sections**. Each section has a `type` (e.g. `pageHero`, `ctaBand`, `formSection`) whose editable fields are declared once in `src/sections/definitions.ts`; the same declaration generates the admin form and the Zod validation. Lists that appear in several places (programmes, pillars, news…) are **collections** declared in `src/lib/collections.ts`.
 
-## 5. Quality checks
+## 6. Quality checks
 
 ```bash
 npm run typecheck
@@ -120,7 +137,7 @@ ADMIN_EMAIL=… ADMIN_PASSWORD=… BASE_URL=http://localhost:3000 npm run test:e
 - `tests/forms.spec.ts` submits every form and checks the success messages.
 - `tests/admin.spec.ts` signs in, edits the home heading, swaps the hero image, checks the public site, and restores.
 
-## 6. Security notes
+## 7. Security notes
 
 - All `/admin` routes are protected by middleware; every server action and API route re-checks the user's role against the database (so deactivating a user takes effect immediately).
 - Child sponsorship applications are visible only to Administrators and Sponsorship Coordinators, are never emailed in full (notifications only say a confidential submission arrived), and never appear on the public site.

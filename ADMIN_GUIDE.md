@@ -65,7 +65,7 @@ In each list you can search, **drag items to change their order** on the website
 
 ## Pictures and documents (Media library)
 
-- **Upload files** or drag photos onto the page. Photos are resized and optimised automatically so the site stays fast on mobile data.
+- **Upload files** or drag photos onto the page. Photos are resized and optimised automatically so the site stays fast on mobile data. Large photos are shrunk for you; PDFs and GIFs must be 4 MB or smaller.
 - Click a photo to:
   - write a **description** (alt text) — what the photo shows, for people using screen readers;
   - set its **focal point** by clicking the most important part of the photo, so it stays visible when the photo is cropped;

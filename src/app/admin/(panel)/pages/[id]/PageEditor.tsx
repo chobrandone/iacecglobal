@@ -30,6 +30,7 @@ type PageMeta = {
   slug: string;
   seoTitle: string;
   metaDescription: string;
+  keywords: string;
   ogImage: string;
   published: boolean;
   isTemplate: boolean;
@@ -62,6 +63,7 @@ export function PageEditor({ page, sections: initial }: { page: PageMeta; sectio
       slug: meta.slug,
       seoTitle: meta.seoTitle,
       metaDescription: meta.metaDescription,
+      keywords: meta.keywords,
       ogImage: meta.ogImage,
       published: meta.published,
       sections: sections.map(({ key: _key, ...s }) => s),
@@ -236,6 +238,12 @@ export function PageEditor({ page, sections: initial }: { page: PageMeta; sectio
               <div>
                 <Label htmlFor="pg-desc">Meta description</Label>
                 <Textarea id="pg-desc" rows={4} value={meta.metaDescription} onChange={(e) => (setMeta({ ...meta, metaDescription: e.target.value }), setDirty(true))} />
+              </div>
+              <div>
+                <Label htmlFor="pg-keywords" help="Words people search for, separated by commas. Also use them naturally in the page's headings and text, which is what Google reads.">
+                  Keywords
+                </Label>
+                <Input id="pg-keywords" value={meta.keywords} onChange={(e) => (setMeta({ ...meta, keywords: e.target.value }), setDirty(true))} />
               </div>
               <FieldEditor
                 field={{ kind: 'imageUrl', name: 'ogImage', label: 'Social sharing image' }}

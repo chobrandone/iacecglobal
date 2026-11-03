@@ -1,12 +1,15 @@
 import { getSettings } from '@/lib/content';
 import { Footer, WhatsAppButton } from '@/components/site/Footer';
 import { Header } from '@/components/site/Header';
+import { JsonLd } from '@/components/site/JsonLd';
 import { RevealObserver } from '@/components/site/RevealObserver';
+import { organisationJsonLd } from '@/lib/seo';
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const s = await getSettings();
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <JsonLd data={organisationJsonLd(s)} />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-navy focus:px-4 focus:py-2 focus:text-white"

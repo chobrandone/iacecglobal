@@ -17,6 +17,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
         slug: page.slug,
         seoTitle: page.seoTitle ?? '',
         metaDescription: page.metaDescription ?? '',
+        keywords: page.keywords ?? '',
         ogImage: page.ogImage ?? '',
         published: page.published,
         isTemplate: page.isTemplate,

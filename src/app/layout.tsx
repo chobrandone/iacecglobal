@@ -37,6 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: s.ogImage?.src ? [{ url: s.ogImage.src }] : undefined,
     },
     twitter: { card: 'summary_large_image' },
+    verification: s.googleSiteVerification ? { google: s.googleSiteVerification } : undefined,
   };
 }
 

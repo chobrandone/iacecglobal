@@ -5,11 +5,10 @@ import sharp from 'sharp';
 import { prisma } from '@/lib/db';
 import { logActivity, requireCapability } from '@/lib/permissions';
 import { putFile, removeFile } from '@/lib/storage';
-import { slugify } from '@/lib/utils';
+import { MAX_UPLOAD_BYTES, slugify } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
-const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'application/pdf']);
 const MAX_WIDTH = 2400;
 
@@ -27,7 +26,7 @@ export async function POST(req: Request) {
   const replaceId = form.get('replaceId')?.toString() || null;
   if (!(file instanceof File)) return NextResponse.json({ error: 'No file received.' }, { status: 400 });
   if (!ALLOWED.has(file.type)) return NextResponse.json({ error: 'Please upload a JPG, PNG, WebP, GIF, AVIF or PDF file.' }, { status: 415 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'Files must be 10 MB or smaller.' }, { status: 413 });
+  if (file.size > MAX_UPLOAD_BYTES) return NextResponse.json({ error: 'Files must be 4 MB or smaller.' }, { status: 413 });
 
   let body: Buffer = Buffer.from(await file.arrayBuffer());
   let mimeType = file.type;

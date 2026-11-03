@@ -18,6 +18,7 @@ import {
 import { forms } from './seed-data/forms';
 import { seedImages, seedImagePath } from './seed-data/images';
 import { seedPages } from './seed-data/pages';
+import { pageSeo } from './seed-data/seo';
 
 const prisma = new PrismaClient();
 const json = (v: unknown) => v as Prisma.InputJsonValue;
@@ -115,6 +116,14 @@ async function main() {
       });
     }
     console.log(`  ✓ ${seedPages.length} pages`);
+  }
+
+  // Search titles and keywords. Pages that already have keywords, or a title set in the admin, are left alone.
+  for (const [slug, seo] of Object.entries(pageSeo)) {
+    const page = await prisma.page.findUnique({ where: { slug } });
+    if (!page || page.keywords) continue;
+    const untouched = !page.seoTitle || page.seoTitle === page.title || page.seoTitle === seedPages.find((x) => x.slug === slug)?.seoTitle;
+    await prisma.page.update({ where: { slug }, data: { keywords: seo.keywords, seoTitle: untouched ? seo.seoTitle : page.seoTitle } });
   }
 
   const fill = async (label: string, count: () => Promise<number>, create: () => Promise<unknown>) => {

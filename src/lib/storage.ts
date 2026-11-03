@@ -7,7 +7,7 @@ import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client
  * Supabase Storage); otherwise they are written to public/uploads (local development only —
  * Vercel's filesystem is read-only).
  */
-const useS3 = () => !!process.env.S3_BUCKET;
+const s3Enabled = () => !!process.env.S3_BUCKET;
 
 let client: S3Client | null = null;
 function s3() {
@@ -24,7 +24,7 @@ function s3() {
 }
 
 export async function putFile(key: string, body: Buffer, contentType: string): Promise<string> {
-  if (useS3()) {
+  if (s3Enabled()) {
     await s3().send(
       new PutObjectCommand({
         Bucket: process.env.S3_BUCKET,
@@ -44,7 +44,7 @@ export async function putFile(key: string, body: Buffer, contentType: string): P
 
 export async function removeFile(key: string) {
   if (key.startsWith('seed/')) return; // bundled seed images live in /public/media and are not deleted
-  if (useS3()) {
+  if (s3Enabled()) {
     await s3().send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key }));
     return;
   }

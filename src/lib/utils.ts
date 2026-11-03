@@ -1,6 +1,9 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+/** Largest upload the server accepts. Vercel rejects request bodies over 4.5 MB before our code runs. */
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

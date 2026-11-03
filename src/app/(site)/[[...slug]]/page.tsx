@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { getPage, getSettings } from '@/lib/content';
-import { pageMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/site/JsonLd';
+import { breadcrumbJsonLd, pageMetadata } from '@/lib/seo';
 import { Sections } from '@/sections/render';
 
 export const revalidate = 3600;
@@ -25,8 +26,9 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const [page, s] = await Promise.all([getPage(slug), getSettings()]);
   if (!page || page.isTemplate) return {};
   return pageMetadata(s, {
-    title: slug === '' ? page.seoTitle || page.title : page.seoTitle || page.title,
+    title: page.seoTitle || page.title,
     description: page.metaDescription,
+    keywords: page.keywords,
     path: slug ? `/${slug}` : '/',
     image: page.ogImage,
   });
@@ -34,7 +36,12 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 
 export default async function Page({ params }: { params: Promise<Params> }) {
   const slug = toSlug((await params).slug);
-  const page = await getPage(slug);
+  const [page, s] = await Promise.all([getPage(slug), getSettings()]);
   if (!page || !page.published || page.isTemplate) notFound();
-  return <Sections sections={page.sections} />;
+  return (
+    <>
+      {slug && <JsonLd data={breadcrumbJsonLd(s, [{ name: page.title, path: `/${slug}` }])} />}
+      <Sections sections={page.sections} />
+    </>
+  );
 }

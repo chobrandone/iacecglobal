@@ -5,14 +5,49 @@ import { FileText, Loader2, Search, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Media } from '@prisma/client';
 import { listMedia } from '@/app/admin/_actions/admin';
+import { MAX_UPLOAD_BYTES } from '@/lib/utils';
 import { Button, Dialog, Input } from './ui';
+
+const MAX_WIDTH = 2400;
+const TOO_LARGE = 'Files must be 4 MB or smaller.';
+
+/** Large photos are shrunk in the browser so they fit under the upload limit. GIFs and PDFs cannot be, so they are refused. */
+async function fitUploadLimit(file: File): Promise<File> {
+  if (file.size <= MAX_UPLOAD_BYTES) return file;
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') throw new Error(TOO_LARGE);
+
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) throw new Error('This image could not be read.');
+  const scale = Math.min(1, MAX_WIDTH / bitmap.width);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext('2d')!;
+  // Safari cannot encode WebP and falls back to PNG, so it gets JPEG, which needs a solid background.
+  const encode = (type: string, quality: number) => new Promise<Blob | null>((done) => canvas.toBlob(done, type, quality));
+  const type = (await encode('image/webp', 0.5))?.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
+  if (type === 'image/jpeg') {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  for (const quality of [0.92, 0.8, 0.65]) {
+    const blob = await encode(type, quality);
+    if (blob && blob.size <= MAX_UPLOAD_BYTES) {
+      return new File([blob], file.name.replace(/.[^.]+$/, '') + (type === 'image/webp' ? '.webp' : '.jpg'), { type });
+    }
+  }
+  throw new Error(TOO_LARGE);
+}
 
 export async function uploadMedia(file: File, replaceId?: string): Promise<Media> {
   const body = new FormData();
-  body.append('file', file);
+  body.append('file', await fitUploadLimit(file));
   if (replaceId) body.append('replaceId', replaceId);
   const res = await fetch('/api/admin/media', { method: 'POST', body });
-  const json = await res.json();
+  const json = await res.json().catch(() => ({})); // Vercel's own errors are not JSON
   if (!res.ok) throw new Error(json.error || 'Upload failed');
   return json as Media;
 }
