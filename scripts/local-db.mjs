@@ -5,7 +5,7 @@ import path from 'node:path';
 import EmbeddedPostgres from 'embedded-postgres';
 
 const dataDir = path.join(process.cwd(), '.pgdata');
-const pg = new EmbeddedPostgres({ databaseDir: dataDir, user: 'postgres', password: 'postgres', port: 5433, persistent: true });
+const pg = new EmbeddedPostgres({ databaseDir: dataDir, user: 'postgres', password: 'postgres', port: 5433, persistent: true, initdbFlags: ['--encoding=UTF8', '--locale=C'] });
 
 if (!existsSync(path.join(dataDir, 'PG_VERSION'))) await pg.initialise();
 await pg.start();

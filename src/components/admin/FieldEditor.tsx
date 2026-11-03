@@ -251,7 +251,7 @@ const withKey = (v: Values) => ({ ...v, __key: (v.__key as string) ?? `k${++keyS
 const stripKey = ({ __key: _k, ...v }: Values) => v;
 
 function ListField({ field, value, onChange }: { field: Extract<Field, { kind: 'list' }>; value: Values[]; onChange: (v: Values[]) => void }) {
-  const [items, setItemsState] = useState(() => value.map(withKey));
+  const [items, setItemsState] = useState<Values[]>(() => value.map(withKey));
   const [openKey, setOpenKey] = useState<string | null>(null);
   const setItems = (next: Values[]) => {
     setItemsState(next);
