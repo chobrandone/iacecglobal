@@ -1,0 +1,11 @@
+node_modules
+.next
+.cache
+.env
+.env.local
+/public/uploads
+/test-results
+/playwright-report
+/.pgdata
+next-env.d.ts
+*.tsbuildinfo
