@@ -12,7 +12,12 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         ] as NavItem[])
       : []),
     ...(can(user.role, 'media') ? ([{ href: '/admin/media', label: 'Media library', icon: 'Images' }] as NavItem[]) : []),
-    ...(can(user.role, 'sponsorship') ? ([{ href: '/admin/submissions', label: 'Submissions', icon: 'Inbox' }] as NavItem[]) : []),
+    ...(can(user.role, 'sponsorship')
+      ? ([
+          { href: '/admin/submissions', label: 'Submissions', icon: 'Inbox' },
+          { href: '/admin/sponsorship', label: 'Sponsorship', icon: 'HeartHandshake' },
+        ] as NavItem[])
+      : []),
     ...(can(user.role, 'forms') ? ([{ href: '/admin/forms', label: 'Forms', icon: 'ClipboardList' }] as NavItem[]) : []),
     ...(can(user.role, 'subscribers') ? ([{ href: '/admin/subscribers', label: 'Newsletter', icon: 'Mail' }] as NavItem[]) : []),
     ...(can(user.role, 'settings') ? ([{ href: '/admin/settings', label: 'Site settings', icon: 'Settings' }] as NavItem[]) : []),

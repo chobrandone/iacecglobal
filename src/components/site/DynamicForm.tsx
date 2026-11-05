@@ -5,6 +5,7 @@ import { Check, Loader2 } from 'lucide-react';
 import { submitForm } from '@/app/actions/public';
 import { validateSubmission, type PublicFormDefinition } from '@/lib/forms';
 import { cn } from '@/lib/utils';
+import { useFormGuard } from './useFormGuard';
 
 // The live site's chevron background class never compiles (spaces inside an arbitrary value),
 // so its selects render with appearance:none and no arrow. Reproduced as-is.
@@ -24,6 +25,7 @@ export function DynamicForm({ def, prefillTopic = false }: { def: PublicFormDefi
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [errorText, setErrorText] = useState(def.errorMessage);
+  const { guard, refresh, widget } = useFormGuard();
 
   // /contact?topic=… pre-fills an event registration, as on the live site.
   useEffect(() => {
@@ -50,7 +52,8 @@ export function DynamicForm({ def, prefillTopic = false }: { def: PublicFormDefi
     if (Object.keys(errs).length) return;
     setState('loading');
     try {
-      const res = await submitForm(def.key, { ...values, __trap: trap });
+      const res = await submitForm(def.key, { ...values, __trap: trap }, guard);
+      refresh();
       if (res.ok) setState('done');
       else {
         if (res.errors) setErrors(res.errors);
@@ -165,6 +168,7 @@ export function DynamicForm({ def, prefillTopic = false }: { def: PublicFormDefi
           );
         })}
       </div>
+      {widget}
       <input
         type="text"
         name="__trap"

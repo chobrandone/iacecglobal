@@ -6,7 +6,7 @@ test.describe('public site', () => {
     test(`${route.path} renders with the right heading and metadata`, async ({ page }) => {
       const res = await page.goto(route.path);
       expect(res?.status()).toBe(200);
-      await expect(page.locator('h1').first()).toHaveText(route.h1);
+      expect((await page.locator('h1').first().innerText()).replace(/\s+/g, ' ').trim()).toBe(route.h1);
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /iacecglobal\.com/);
       await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.{20,}/);
     });
@@ -23,7 +23,7 @@ test.describe('public site', () => {
     await expect(menu.getByRole('menuitem')).toHaveCount(7);
     await expect(menu.getByRole('menuitem', { name: 'Volunteer With Us' })).toHaveAttribute('href', '/volunteer');
     await expect(page.locator('a[href="https://wa.me/237677721678"]')).toBeVisible();
-    await expect(page.locator('footer')).toContainText('Stay in touch');
+    await expect(page.getByRole('contentinfo')).toContainText('Stay in touch');
     await expect(page.getByText('Made with Base44')).toHaveCount(0);
   });
 

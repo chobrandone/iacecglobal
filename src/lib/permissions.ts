@@ -3,10 +3,10 @@ import type { Role } from '@prisma/client';
 import { auth } from '@/auth';
 import { prisma } from './db';
 
-export type Capability = 'content' | 'media' | 'submissions' | 'sponsorship' | 'forms' | 'subscribers' | 'settings' | 'users';
+export type Capability = 'content' | 'media' | 'submissions' | 'sponsorship' | 'sponsorship-admin' | 'forms' | 'subscribers' | 'settings' | 'users';
 
 const capabilities: Record<Role, Capability[]> = {
-  ADMIN: ['content', 'media', 'submissions', 'sponsorship', 'forms', 'subscribers', 'settings', 'users'],
+  ADMIN: ['content', 'media', 'submissions', 'sponsorship', 'sponsorship-admin', 'forms', 'subscribers', 'settings', 'users'],
   EDITOR: ['content', 'media'],
   SPONSORSHIP_COORDINATOR: ['sponsorship'],
 };

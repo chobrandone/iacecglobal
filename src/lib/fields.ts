@@ -63,7 +63,7 @@ export function fieldSchema(field: Field): ZodTypeAny {
     case 'list':
       return z.array(objectSchema(field.fields)).default([]);
     case 'group':
-      return objectSchema(field.fields).default({});
+      return objectSchema(field.fields).prefault({}); // prefault, so the fields' own defaults still apply
   }
 }
 
@@ -75,7 +75,12 @@ export function objectSchema(fields: Field[]) {
 
 /** Builds an empty value for a set of fields (used when adding list items / new sections). */
 export function emptyValue(fields: Field[]): Record<string, unknown> {
-  return objectSchema(fields).parse({});
+  return Object.fromEntries(
+    fields.map((f) => {
+      const value = fieldSchema(f).safeParse(undefined);
+      return [f.name, value.success ? value.data : '']; // required text starts empty
+    }),
+  );
 }
 
 // Shorthand builders keep the section definitions readable.

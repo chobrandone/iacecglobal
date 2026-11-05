@@ -1,38 +1,25 @@
 'use server';
 
-import { createHash } from 'node:crypto';
-import { headers } from 'next/headers';
 import { z } from 'zod';
+import { headers } from 'next/headers';
+import { clientFingerprint, clientIp } from '@/lib/client-fingerprint';
 import { prisma } from '@/lib/db';
 import { getSettings } from '@/lib/content';
 import { sendMail } from '@/lib/email';
+import { checkFormToken, checkTurnstile, issueFormToken, looksLikeSpam, mayAutoReply, mayNotifyStaff, withinSubmissionLimits, type FormGuard } from '@/lib/form-guard';
 import { EMAIL_RE, cleanSubmission, validateSubmission, type FormField } from '@/lib/forms';
-
-const WINDOW_MS = 10 * 60 * 1000;
-const MAX_PER_WINDOW = 6;
-
-async function clientFingerprint() {
-  const h = await headers();
-  const ip = (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip') || 'unknown';
-  const ipHash = createHash('sha256')
-    .update(ip + (process.env.AUTH_SECRET ?? ''))
-    .digest('hex')
-    .slice(0, 32);
-  return { ipHash, userAgent: (h.get('user-agent') ?? '').slice(0, 300) };
-}
-
-async function rateLimited(ipHash: string) {
-  const since = new Date(Date.now() - WINDOW_MS);
-  const [subs, news] = await Promise.all([
-    prisma.submission.count({ where: { ipHash, createdAt: { gte: since } } }),
-    prisma.subscriber.count({ where: { ipHash, createdAt: { gte: since } } }),
-  ]);
-  return subs + news >= MAX_PER_WINDOW;
-}
+import { DAY, MINUTE, hit } from '@/lib/rate-limit';
 
 export type SubmitResult = { ok: true } | { ok: false; errors?: Record<string, string>; message?: string };
 
-export async function submitForm(formKey: string, values: Record<string, unknown>): Promise<SubmitResult> {
+/** Handed to a form when it opens. See checkFormToken. */
+export async function getFormToken() {
+  return issueFormToken();
+}
+
+const STALE = 'Please wait a moment and press send again.';
+
+export async function submitForm(formKey: string, values: Record<string, unknown>, guard: FormGuard = {}): Promise<SubmitResult> {
   const def = await prisma.formDefinition.findUnique({ where: { key: formKey } });
   if (!def) return { ok: false, message: 'This form is not available.' };
 
@@ -43,10 +30,14 @@ export async function submitForm(formKey: string, values: Record<string, unknown
   const errors = validateSubmission(fields, values);
   if (Object.keys(errors).length) return { ok: false, errors };
 
+  if (!(await checkFormToken(guard.token))) return { ok: false, message: STALE };
+  if (!(await checkTurnstile(guard.turnstile, clientIp(await headers())))) return { ok: false, message: 'Please complete the security check.' };
+
   const { ipHash, userAgent } = await clientFingerprint();
-  if (await rateLimited(ipHash)) {
+  if (!(await withinSubmissionLimits(ipHash))) {
     return { ok: false, message: 'Too many submissions from your connection. Please wait a few minutes and try again.' };
   }
+  if (looksLikeSpam(values)) return { ok: true }; // Pretend success, as with the honeypot.
 
   const data = cleanSubmission(fields, values);
   await prisma.submission.create({ data: { formKey, data, ipHash, userAgent } });
@@ -62,14 +53,17 @@ export async function submitForm(formKey: string, values: Record<string, unknown
     | string
     | undefined;
 
+  const [notifyStaff, autoReply] = await Promise.all([mayNotifyStaff(), def.autoReply && submitterEmail ? mayAutoReply(submitterEmail) : false]);
   await Promise.allSettled([
-    sendMail({
-      to: recipients,
-      subject: `New ${def.name} submission`,
-      text: lines.join('\n'),
-      replyTo: def.restricted ? undefined : submitterEmail,
-    }),
-    def.autoReply && submitterEmail
+    notifyStaff
+      ? sendMail({
+          to: recipients,
+          subject: `New ${def.name} submission`,
+          text: lines.join('\n'),
+          replyTo: def.restricted ? undefined : submitterEmail,
+        })
+      : Promise.resolve(false),
+    autoReply && submitterEmail
       ? sendMail({
           to: submitterEmail,
           subject: def.autoReplySubject,
@@ -88,7 +82,7 @@ export async function subscribe(input: { email: string; source?: string; __trap?
   const parsed = subscribeSchema.safeParse(input);
   if (!parsed.success) return { ok: false };
   const { ipHash } = await clientFingerprint();
-  if (await rateLimited(ipHash)) return { ok: false };
+  if (!(await hit(`newsletter:ip:${ipHash}`, 6, 10 * MINUTE)) || !(await hit('newsletter:all-day', 200, DAY))) return { ok: false };
   await prisma.subscriber.upsert({
     where: { email: parsed.data.email },
     create: { email: parsed.data.email, source: parsed.data.source, ipHash },

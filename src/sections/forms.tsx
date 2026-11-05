@@ -39,9 +39,10 @@ export async function FormSection({
     boxes: { icon: string; title: string; text: string; numbered: boolean }[];
     cardHeading: string;
     cardText: string;
+    cardLink?: LinkValue;
   }
 >) {
-  const def = await loadForm(c.formKey);
+  const def = c.formKey ? await loadForm(c.formKey) : null;
   const hasAside = c.bullets.length > 0 || c.notes.length > 0 || c.boxes.length > 0;
   const header = <SectionHeader eyebrow={c.eyebrow} title={c.heading} description={c.description} />;
   return (
@@ -113,7 +114,13 @@ export async function FormSection({
             <>
               <h3 className="text-[1.15rem] text-navy">{c.cardHeading}</h3>
               {c.cardText && <p className="mt-2 text-[0.9rem] text-ink/60">{c.cardText}</p>}
-              <div className="mt-6">{def && <DynamicForm def={def} />}</div>
+              {c.cardLink?.href ? (
+                <ButtonLink href={c.cardLink.href} className="mt-6">
+                  {c.cardLink.label}
+                </ButtonLink>
+              ) : (
+                <div className="mt-6">{def && <DynamicForm def={def} />}</div>
+              )}
             </>
           ) : (
             def && <DynamicForm def={def} />

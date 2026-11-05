@@ -76,6 +76,35 @@ test.describe('admin', () => {
     await expect(page.getByText('Deleted')).toBeVisible();
   });
 
+  test('the rich text editor loads and accepts typing', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await signIn(page);
+    await page.goto('/admin/collections/news/new');
+    const editor = page.locator('.ProseMirror').first();
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.type('E2E typing check');
+    await expect(editor).toContainText('E2E typing check');
+    await page.getByRole('button', { name: 'Bold' }).first().click();
+    expect(errors).toEqual([]);
+  });
+
+  test('every collection can open a new item', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await signIn(page);
+    await page.goto('/admin/collections');
+    const links = await page.locator('main a[href^="/admin/collections/"]').evaluateAll((list) => [...new Set(list.map((a) => a.getAttribute('href')!))]);
+    expect(links.length).toBeGreaterThan(5);
+    for (const link of links) {
+      const res = await page.goto(`${link}/new`);
+      expect(res?.status(), link).toBe(200);
+      await expect(page.getByRole('button', { name: /Save|Create/ }).first(), link).toBeVisible();
+    }
+    expect(errors).toEqual([]);
+  });
+
   test('unauthenticated visitors are sent to the login page', async ({ page }) => {
     await page.goto('/admin/pages');
     await expect(page).toHaveURL(/\/admin\/login/);

@@ -1,3 +1,4 @@
+import { PrismaClient } from '@prisma/client';
 import { expect, test, type Page } from '@playwright/test';
 
 /** Submits every public form with valid data and checks the live site's success message. */
@@ -40,12 +41,6 @@ const cases: { path: string; form: string; values: Fill; success: string }[] = [
     success: 'Thank you for standing with a child.',
   },
   {
-    path: '/community-support#apply',
-    form: 'child-application',
-    values: { child_full_name: 'Test Child', guardian_full_name: 'Test Guardian', guardian_phone: '+237 600 000 001', consent_confirmed: true },
-    success: 'Your application has been received.',
-  },
-  {
     path: '/partners#become-a-partner',
     form: 'partnership',
     values: { ...person, organisation: 'Test Org', role_title: 'x', programme: 'x' },
@@ -61,11 +56,27 @@ const cases: { path: string; form: string; values: Fill; success: string }[] = [
   { path: '/contact', form: 'contact', values: { ...person, subject: 'x', message: 'Hello from the test suite' }, success: 'Your message has been sent.' },
 ];
 
+const prisma = new PrismaClient();
+
+// The suite sends more forms than the rate limit allows from one address, so its own rows are removed as it goes.
+async function removeTestRows() {
+  await prisma.rateLimit.deleteMany();
+  await prisma.submission.deleteMany({ where: { data: { path: ['email'], string_ends_with: '@example.com' } } });
+  await prisma.subscriber.deleteMany({ where: { email: { endsWith: '@example.com' } } });
+}
+
 test.describe('forms', () => {
+  test.beforeEach(removeTestRows);
+  test.afterAll(async () => {
+    await removeTestRows();
+    await prisma.$disconnect();
+  });
+
   for (const c of cases) {
     test(`${c.form} form submits`, async ({ page }) => {
       await page.goto(c.path);
       await fillForm(page, `form[data-form="${c.form}"]`, c.values);
+      await page.waitForTimeout(3200); // the form refuses anything sent faster than a person could
       await page.locator(`form[data-form="${c.form}"] button[type="submit"]`).click();
       await expect(page.getByRole('heading', { name: c.success })).toBeVisible();
     });

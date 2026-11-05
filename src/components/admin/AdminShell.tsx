@@ -7,6 +7,7 @@ import {
   ClipboardList,
   ExternalLink,
   FileText,
+  HeartHandshake,
   Images,
   Inbox,
   LayoutDashboard,
@@ -22,7 +23,7 @@ import {
 import { logout } from '@/app/admin/_actions/admin';
 import { cn } from '@/lib/utils';
 
-const icons = { LayoutDashboard, FileText, Library, Images, Inbox, ClipboardList, Mail, Settings, Users, UserRound };
+const icons = { LayoutDashboard, FileText, Library, Images, Inbox, HeartHandshake, ClipboardList, Mail, Settings, Users, UserRound };
 export type NavItem = { href: string; label: string; icon: keyof typeof icons };
 
 export function AdminShell({ nav, user, children }: { nav: NavItem[]; user: { name: string; email: string; role: string }; children: ReactNode }) {

@@ -47,7 +47,7 @@ const sectionInput = z.object({
   visible: z.boolean(),
   background: z.enum(['white', 'mist', 'navy']),
   anchor: z.string().nullable().optional(),
-  content: z.record(z.unknown()),
+  content: z.record(z.string(), z.unknown()),
 });
 
 const pageInput = z.object({

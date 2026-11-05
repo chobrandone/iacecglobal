@@ -19,6 +19,7 @@ import { forms } from './seed-data/forms';
 import { seedImages, seedImagePath } from './seed-data/images';
 import { seedPages } from './seed-data/pages';
 import { pageSeo } from './seed-data/seo';
+import { seedSponsorshipDemo } from './seed-data/sponsorship-demo';
 
 const prisma = new PrismaClient();
 const json = (v: unknown) => v as Prisma.InputJsonValue;
@@ -26,7 +27,8 @@ const json = (v: unknown) => v as Prisma.InputJsonValue;
 /**
  * Fills an empty database with the live site's content. Content tables are only written when
  * they are empty, so re-running the seed never overwrites edits made in the admin.
- * Pass --reset to replace all content (users and submissions are kept).
+ * Pass --reset to replace all content (users, submissions and sponsorship records are kept).
+ * Pass --demo to add three fictional sponsored children for trying out the dashboard.
  */
 async function main() {
   const reset = process.argv.includes('--reset');
@@ -173,6 +175,18 @@ async function main() {
     });
   }
   console.log(`  ✓ ${forms.length} forms`);
+
+  // The short application form becomes a card linking to the full registration form.
+  // Sections an admin has already changed to something else are left alone.
+  const applySeed = seedPages.find((p) => p.slug === 'community-support')?.sections.find((x) => x.anchor === 'apply');
+  const applySection = await prisma.section.findFirst({ where: { anchor: 'apply', page: { slug: 'community-support' } } });
+  if (applySeed && applySection && (applySection.content as { formKey?: string }).formKey === 'child-application') {
+    await prisma.section.update({ where: { id: applySection.id }, data: { content: json(applySeed.content) } });
+  }
+  await prisma.$executeRaw`UPDATE "Section" SET content = replace(content::text, '/community-support#apply', '/community-support/register')::jsonb WHERE content::text LIKE '%/community-support#apply%'`;
+
+  await prisma.sponsorshipSettings.upsert({ where: { id: 1 }, create: { id: 1, recipients: [defaultSettings.notificationEmail] }, update: {} });
+  if (process.argv.includes('--demo')) await seedSponsorshipDemo(prisma);
 
   // First administrator
   const email = process.env.ADMIN_EMAIL?.toLowerCase();

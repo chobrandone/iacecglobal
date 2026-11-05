@@ -139,6 +139,12 @@ ADMIN_EMAIL=… ADMIN_PASSWORD=… BASE_URL=http://localhost:3000 npm run test:e
 
 ## 7. Security notes
 
+### Form and login protection
+
+Public forms use a honeypot, a signed one-use token that refuses anything sent within 3 seconds, link-spam filtering, and limits per connection and for the whole site. An address gets at most two auto-replies a day, and the site sends at most 50 a day. Five wrong passwords lock an account for 15 minutes.
+
+For a human check as well, create free Cloudflare Turnstile keys and set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`, then rebuild. Without them, a determined script can still reach the daily caps.
+
 - All `/admin` routes are protected by middleware; every server action and API route re-checks the user's role against the database (so deactivating a user takes effect immediately).
 - Child sponsorship applications are visible only to Administrators and Sponsorship Coordinators, are never emailed in full (notifications only say a confidential submission arrived), and never appear on the public site.
 - Forms: Zod validation on client and server, honeypot field `__trap`, per-connection rate limiting (6 submissions / 10 minutes), length limits.

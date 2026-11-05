@@ -12,7 +12,7 @@ import { MediaPicker } from './MediaPicker';
 export function RichTextEditor({ value, onChange, id }: { value: string; onChange: (html: string) => void; id?: string }) {
   const [picking, setPicking] = useState(false);
   const editor = useEditor({
-    extensions: [StarterKit.configure({ heading: { levels: [2, 3] } }), Link.configure({ openOnClick: false }), ImageExt],
+    extensions: [StarterKit.configure({ heading: { levels: [2, 3] }, link: false }), Link.configure({ openOnClick: false }), ImageExt],
     content: value || '',
     immediatelyRender: false,
     editorProps: {

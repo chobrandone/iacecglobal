@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import type { FormField } from '@/lib/forms';
 import { readableFormKeys, requirePage } from '@/lib/permissions';
 import { Card } from '@/components/admin/ui';
+import { ConvertSponsorButton } from '@/components/sponsorship/ConvertSponsorButton';
 import { SubmissionActions } from './SubmissionActions';
 
 export default async function SubmissionDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -32,6 +33,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
           <Lock className="h-4 w-4" /> Confidential child information. Do not copy, forward or publish.
         </p>
       )}
+      {sub.formKey === 'sponsor' && <ConvertSponsorButton submissionId={sub.id} />}
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Card>
           <dl className="divide-y divide-navy/[0.06]">

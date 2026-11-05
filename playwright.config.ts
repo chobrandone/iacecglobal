@@ -1,5 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Tests that talk to the database or decrypt data read the same .env as the app.
+try {
+  process.loadEnvFile();
+} catch {
+  // No .env file, for example in CI.
+}
+
 const baseURL = process.env.BASE_URL || 'http://localhost:3000';
 
 export default defineConfig({

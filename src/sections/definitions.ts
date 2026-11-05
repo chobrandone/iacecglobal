@@ -31,6 +31,7 @@ const formKeys = [
   { value: 'outreach', label: 'Outreach invitation' },
   { value: 'forum', label: 'Join the forum' },
   { value: 'sponsor', label: 'Become a sponsor' },
+  { value: '', label: 'No form (show a card with a button)' },
   { value: 'child-application', label: 'Child sponsorship application (confidential)' },
   { value: 'partnership', label: 'Partnership enquiry' },
   { value: 'volunteer', label: 'Volunteer application' },
@@ -289,6 +290,7 @@ export const sectionDefinitions: SectionDefinition[] = [
       f.list('boxes', 'Information boxes', [iconField, f.text('title', 'Title'), f.textarea('text', 'Text (or one list item per line)', 4), f.bool('numbered', 'Show as list')], 'Box'),
       f.text('cardHeading', 'Heading inside the form card (optional)'),
       f.textarea('cardText', 'Text inside the form card (optional)', 2),
+      f.link('cardLink', 'Button inside the card (shown instead of a form)'),
     ],
   },
   {

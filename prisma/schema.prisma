@@ -16,16 +16,17 @@ enum Role {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  name         String
-  passwordHash String
-  role         Role      @default(EDITOR)
-  active       Boolean   @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  activity     ActivityLog[]
+  id                   String             @id @default(cuid())
+  email                String             @unique
+  name                 String
+  passwordHash         String
+  role                 Role               @default(EDITOR)
+  active               Boolean            @default(true)
+  lastLoginAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  activity             ActivityLog[]
+  assignedApplications ChildApplication[]
 }
 
 model ActivityLog {
@@ -160,30 +161,30 @@ model NewsArticle {
 }
 
 model Event {
-  id                  String    @id @default(cuid())
-  title               String
-  startsAt            DateTime
-  startTime           String?
-  venue               String?
-  description         String
-  image               String?
-  registrationOpen    Boolean   @default(false)
-  capacity            Int?
-  published           Boolean   @default(true)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id               String   @id @default(cuid())
+  title            String
+  startsAt         DateTime
+  startTime        String?
+  venue            String?
+  description      String
+  image            String?
+  registrationOpen Boolean  @default(false)
+  capacity         Int?
+  published        Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Conference {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   title     String
   dateLabel String
   venue     String?
   summary   String
   report    String?
-  gallery   Json     @default("[]")
-  published Boolean  @default(true)
-  order     Int      @default(0)
+  gallery   Json    @default("[]")
+  published Boolean @default(true)
+  order     Int     @default(0)
 }
 
 model Resource {
@@ -276,22 +277,22 @@ model Media {
 }
 
 model FormDefinition {
-  id             String   @id @default(cuid())
-  key            String   @unique
-  name           String
-  restricted     Boolean  @default(false) // child-protection: visible to ADMIN + SPONSORSHIP_COORDINATOR only
-  sponsorship    Boolean  @default(false) // visible to SPONSORSHIP_COORDINATOR
-  submitLabel    String
-  successTitle   String
-  successBody    String
-  note           String?
-  errorMessage   String   @default("We could not send this just now. Please try again, or email us directly at info@iacecglobal.com.")
-  recipients     String[]
-  autoReply      Boolean  @default(true)
-  autoReplySubject String  @default("Thank you for contacting IACEC")
-  autoReplyBody  String   @default("Thank you for writing to the Innovation Association for Christian Educators. A member of our team will respond as soon as possible.")
-  fields         Json
-  updatedAt      DateTime @updatedAt
+  id               String   @id @default(cuid())
+  key              String   @unique
+  name             String
+  restricted       Boolean  @default(false) // child-protection: visible to ADMIN + SPONSORSHIP_COORDINATOR only
+  sponsorship      Boolean  @default(false) // visible to SPONSORSHIP_COORDINATOR
+  submitLabel      String
+  successTitle     String
+  successBody      String
+  note             String?
+  errorMessage     String   @default("We could not send this just now. Please try again, or email us directly at info@iacecglobal.com.")
+  recipients       String[]
+  autoReply        Boolean  @default(true)
+  autoReplySubject String   @default("Thank you for contacting IACEC")
+  autoReplyBody    String   @default("Thank you for writing to the Innovation Association for Christian Educators. A member of our team will respond as soon as possible.")
+  fields           Json
+  updatedAt        DateTime @updatedAt
 }
 
 enum SubmissionStatus {
@@ -322,4 +323,546 @@ model Subscriber {
   source    String?
   ipHash    String?
   createdAt DateTime @default(now())
+}
+
+// ─── Child sponsorship ───────────────────────────────────────────────────
+// Visible to ADMIN and SPONSORSHIP_COORDINATOR only. Money is whole FCFA. Dates are UTC.
+// Columns marked (encrypted) hold ciphertext from src/lib/sponsorship/encryption.ts.
+
+enum ApplicationStatus {
+  NEW
+  CONTACTED
+  VISIT_SCHEDULED
+  VERIFIED
+  ACCEPTED
+  WAITING_LIST
+  NOT_ACCEPTED
+  SPONSORED
+  EXITED
+}
+
+enum ApplicationSource {
+  ONLINE
+  PAPER
+}
+
+enum CompletedBy {
+  CARETAKER
+  IACEC_MEMBER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ChildStatus {
+  LOST_FATHER
+  LOST_MOTHER
+  LOST_BOTH
+}
+
+enum ParentRole {
+  FATHER
+  MOTHER
+}
+
+enum DocumentType {
+  BIRTH_CERTIFICATE
+  DEATH_PROOF
+  CARETAKER_ID
+  REPORT_CARD
+  FEES_RECEIPT
+  PASSPORT_PHOTO
+  RECOMMENDATION
+  REFERENCE_ID
+  CHILD_PHOTO
+  VISIT_PHOTO
+  OTHER
+}
+
+enum VisitType {
+  HOME
+  SCHOOL
+  PHONE
+  FELLOWSHIP
+}
+
+enum Wellbeing {
+  GOOD
+  FAIR
+  CONCERN
+}
+
+enum VisitFrequency {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+}
+
+enum SponsorStatus {
+  PROSPECT
+  ACTIVE
+  INACTIVE
+}
+
+enum SponsorshipStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum BackupType {
+  REALTIME
+  DAILY
+  MONTHLY
+  MANUAL
+}
+
+enum BackupStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+}
+
+model ChildApplication {
+  id                String            @id @default(cuid())
+  reference         String            @unique
+  status            ApplicationStatus @default(NEW)
+  source            ApplicationSource @default(ONLINE)
+  isTest            Boolean           @default(false) // fictional demo record
+  completedBy       CompletedBy       @default(CARETAKER)
+  helperName        String?
+  helperPhone       String?
+  assignedToId      String?
+  assignedTo        User?             @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  documentsComplete Boolean           @default(false)
+  photoConsent      Boolean           @default(false)
+  declarations      Json              @default("{}")
+  signatureName     String?
+  signatureDate     DateTime?
+  signatureKey      String? // drawn signature, private storage
+  exitReason        String?
+  ipHash            String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  child         Child?
+  caretaker     Caretaker?
+  referral      Referral?
+  verification  Verification?
+  parents       Parent[]
+  references    FamilyReference[]
+  careTeam      CareTeamMember[]
+  schoolRecords SchoolRecord[]
+  documents     ApplicationDocument[]
+  statusChanges StatusChange[]
+  notes         InternalNote[]
+  fieldChanges  FieldChange[]
+
+  @@index([status, createdAt])
+  @@index([assignedToId])
+}
+
+model Child {
+  id            String           @id @default(cuid())
+  applicationId String           @unique
+  application   ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fullName      String
+  gender        Gender
+  dateOfBirth   DateTime
+  placeOfBirth  String
+  address       String
+  church        String?
+  status        ChildStatus
+  healthNotes   String? // (encrypted)
+  interests     String?
+
+  siblings        Sibling[]
+  visits          VisitLog[]
+  materialSupport MaterialSupport[]
+  sponsorships    Sponsorship[]
+
+  @@index([fullName])
+}
+
+model Parent {
+  id                   String           @id @default(cuid())
+  applicationId        String
+  application          ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  role                 ParentRole
+  fullName             String?
+  deceased             Boolean
+  dateOfDeath          DateTime?
+  causeOfDeath         String?
+  occupation           String?
+  hometown             String?
+  certificateAvailable Boolean          @default(false)
+
+  @@unique([applicationId, role])
+}
+
+model Sibling {
+  id      String @id @default(cuid())
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  name    String
+  age     Int?
+
+  @@index([childId])
+}
+
+model Caretaker {
+  id                String           @id @default(cuid())
+  applicationId     String           @unique
+  application       ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fullName          String
+  relationship      String
+  relationshipOther String?
+  livingSince       DateTime?
+  phones            String[]
+  email             String?
+  address           String
+  income            String?
+  householdSize     Int?
+  otherChildren     Int?
+  nationalId        String // (encrypted)
+  church            String?
+  pastorName        String?
+  willingMember     Boolean?
+}
+
+model FamilyReference {
+  id            String           @id @default(cuid())
+  applicationId String
+  application   ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  position      Int // 1 or 2
+  fullName      String
+  relationship  String
+  phone         String
+  address       String?
+  willing       Boolean          @default(false)
+
+  @@unique([applicationId, position])
+}
+
+model CareTeamMember {
+  id            String           @id @default(cuid())
+  applicationId String
+  application   ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  position      Int // 1 or 2
+  fullName      String
+  phone         String
+  connection    String?
+  frequency     VisitFrequency?
+
+  @@unique([applicationId, position])
+}
+
+model Referral {
+  id            String           @id @default(cuid())
+  applicationId String           @unique
+  application   ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  referredBy    String
+  relationship  String?
+}
+
+model SchoolRecord {
+  id               String           @id @default(cuid())
+  applicationId    String
+  application      ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  schoolYear       String // e.g. 2026/2027
+  term             String?
+  school           String
+  level            String
+  schoolAddress    String?
+  headteacherPhone String?
+  feesDue          Int
+  feesDueDate      DateTime?
+  feesOwed         Int?
+  results          String?
+  currentPayer     String?
+  materialNeeds    String[]
+  materialOther    String?
+  urgentNeeds      String?
+  supportReceived  String?
+  createdAt        DateTime         @default(now())
+
+  payments FeePayment[]
+
+  @@index([applicationId, schoolYear])
+}
+
+model FeePayment {
+  id                String               @id @default(cuid())
+  schoolRecordId    String
+  schoolRecord      SchoolRecord         @relation(fields: [schoolRecordId], references: [id], onDelete: Cascade)
+  amount            Int
+  paidAt            DateTime
+  paidBy            String?
+  receiptDocumentId String?
+  receiptDocument   ApplicationDocument? @relation(fields: [receiptDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([schoolRecordId])
+}
+
+model MaterialSupport {
+  id      String   @id @default(cuid())
+  childId String
+  child   Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  item    String
+  givenAt DateTime
+  value   Int?
+  givenBy String?
+
+  @@index([childId])
+}
+
+model ApplicationDocument {
+  id            String           @id @default(cuid())
+  applicationId String
+  application   ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  visitLogId    String?
+  visitLog      VisitLog?        @relation(fields: [visitLogId], references: [id], onDelete: SetNull)
+  type          DocumentType
+  storageKey    String           @unique // private storage only
+  filename      String
+  mimeType      String
+  size          Int
+  verified      Boolean          @default(false)
+  verifiedById  String?
+  verifiedAt    DateTime?
+  uploadedById  String? // empty for files from the public form
+  createdAt     DateTime         @default(now())
+
+  feePayments FeePayment[]
+
+  @@index([applicationId, type])
+}
+
+model Verification {
+  id                String             @id @default(cuid())
+  applicationId     String             @unique
+  application       ChildApplication   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  visitDate         DateTime?
+  visitedBy         String?
+  findings          String?
+  documentsVerified Boolean            @default(false)
+  recommendation    String?
+  decision          ApplicationStatus?
+  decisionReason    String?
+  updatedAt         DateTime           @updatedAt
+}
+
+model StatusChange {
+  id            String             @id @default(cuid())
+  applicationId String
+  application   ChildApplication   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  from          ApplicationStatus?
+  to            ApplicationStatus
+  reason        String?
+  userId        String?
+  userName      String // kept if the user is later removed
+  emailed       Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+
+  @@index([applicationId, createdAt])
+}
+
+model VisitLog {
+  id        String    @id @default(cuid())
+  childId   String
+  child     Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  date      DateTime
+  byName    String
+  type      VisitType
+  notes     String?
+  wellbeing Wellbeing @default(GOOD)
+  createdAt DateTime  @default(now())
+
+  photos ApplicationDocument[]
+
+  @@index([childId, date])
+  @@index([wellbeing])
+}
+
+model Sponsor {
+  id           String        @id @default(cuid())
+  fullName     String
+  phone        String?
+  email        String?
+  country      String?
+  organisation String?
+  status       SponsorStatus @default(PROSPECT)
+  submissionId String?       @unique // the "Become a sponsor" submission it came from
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  sponsorships Sponsorship[]
+  reports      SponsorReport[]
+}
+
+model Sponsorship {
+  id                 String            @id @default(cuid())
+  sponsorId          String
+  sponsor            Sponsor           @relation(fields: [sponsorId], references: [id], onDelete: Restrict)
+  childId            String
+  child              Child             @relation(fields: [childId], references: [id], onDelete: Cascade)
+  startDate          DateTime
+  endDate            DateTime?
+  feesCommitted      Int?
+  materialCommitment String?
+  frequency          String?
+  status             SponsorshipStatus @default(ACTIVE)
+
+  @@index([sponsorId])
+  @@index([childId])
+}
+
+model SponsorReport {
+  id        String    @id @default(cuid())
+  sponsorId String
+  sponsor   Sponsor   @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  childId   String?
+  term      String
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([sponsorId])
+}
+
+model InternalNote {
+  id            String           @id @default(cuid())
+  applicationId String
+  application   ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  authorId      String?
+  authorName    String // kept if the user is later removed
+  body          String
+  createdAt     DateTime         @default(now())
+
+  @@index([applicationId, createdAt])
+}
+
+model FieldChange {
+  id            String           @id @default(cuid())
+  applicationId String
+  application   ChildApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  field         String
+  oldValue      String? // never set for encrypted fields
+  newValue      String? // never set for encrypted fields
+  userId        String?
+  userName      String
+  createdAt     DateTime         @default(now())
+
+  @@index([applicationId, createdAt])
+}
+
+/// Append-only record of who saw or changed child data. Survives deletion of the child.
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userName  String
+  action    String
+  entity    String
+  entityId  String?
+  ip        String?
+  userAgent String?
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([userId, createdAt])
+}
+
+model BackupRun {
+  id            String       @id @default(cuid())
+  type          BackupType
+  status        BackupStatus @default(RUNNING)
+  startedAt     DateTime     @default(now())
+  finishedAt    DateTime?
+  filesUploaded Int          @default(0)
+  bytes         BigInt       @default(0)
+  error         String?
+
+  @@index([startedAt])
+}
+
+model DriveSync {
+  id          String   @id @default(cuid())
+  entity      String
+  entityId    String
+  driveFileId String
+  checksum    String?
+  syncedAt    DateTime @default(now())
+
+  @@unique([entity, entityId])
+}
+
+model Job {
+  id        String    @id @default(cuid())
+  type      String
+  payload   Json      @default("{}")
+  status    JobStatus @default(PENDING)
+  attempts  Int       @default(0)
+  runAt     DateTime  @default(now())
+  lastError String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, runAt])
+}
+
+model UploadSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  keys      String[]
+  ipHash    String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+model ReferenceCounter {
+  year Int @id
+  last Int @default(0)
+}
+
+/// Stops a restore from bringing back a child who was permanently deleted.
+model DeletionTombstone {
+  reference   String   @id
+  deletedAt   DateTime @default(now())
+  deletedById String?
+}
+
+model SponsorshipSettings {
+  id                 Int      @id @default(1)
+  programmeName      String   @default("Child Sponsorship Programme")
+  targetChildren     Int      @default(12)
+  recipients         String[]
+  fieldOverrides     Json     @default("{}")
+  retentionMonths    Int      @default(84)
+  keepDailyBackups   Int      @default(30)
+  encryptBackups     Boolean  @default(true)
+  driveFolderId      String?
+  googleRefreshToken String? // (encrypted)
+  updatedAt          DateTime @updatedAt
+}
+
+// ─── Abuse protection ────────────────────────────────────────────────────
+
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
 }

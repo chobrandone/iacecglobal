@@ -169,7 +169,7 @@ export const seedPages: SeedPage[] = [
       },
       sponsorshipSection('sponsorship', [
         { label: 'Sponsor a Child', href: '/community-support#sponsor', style: 'primary' },
-        { label: 'Apply for Child Support', href: '/community-support#apply', style: 'outline' },
+        { label: 'Apply for Child Support', href: '/community-support/register', style: 'outline' },
       ]),
       {
         type: 'timeline',
@@ -720,7 +720,7 @@ export const seedPages: SeedPage[] = [
       },
       sponsorshipSection('sponsorship', [
         { label: 'Sponsor a Child', href: '/community-support#sponsor', style: 'primary' },
-        { label: 'Apply for Child Support', href: '/community-support#apply', style: 'outline' },
+        { label: 'Apply for Child Support', href: '/community-support/register', style: 'outline' },
       ]),
       {
         type: 'formSection',
@@ -747,7 +747,7 @@ export const seedPages: SeedPage[] = [
         background: 'mist',
         anchor: 'apply',
         content: {
-          formKey: 'child-application',
+          formKey: '',
           layout: 'balanced',
           compact: true,
           eyebrow: 'Apply for support',
@@ -761,7 +761,7 @@ export const seedPages: SeedPage[] = [
             {
               icon: 'Lock',
               title: 'Private and confidential',
-              text: 'This form is seen only by authorised IACEC sponsorship staff. Child details, documents, school information and family circumstances are never published on this website. Please do not upload identity documents here — we will request them securely during verification.',
+              text: 'This form is seen only by authorised IACEC sponsorship staff. Child details, documents, school information and family circumstances are never published on this website.',
               numbered: false,
             },
             {
@@ -776,8 +776,9 @@ export const seedPages: SeedPage[] = [
               numbered: true,
             },
           ],
-          cardHeading: '',
-          cardText: '',
+          cardHeading: 'Register a child',
+          cardText: 'The form takes about 20 minutes, works on a phone and saves as you go. Have the child’s birth certificate, proof of the parent’s death and the caretaker’s ID card ready to photograph.',
+          cardLink: { label: 'Start the registration form', href: '/community-support/register' },
         },
       },
       cta(
