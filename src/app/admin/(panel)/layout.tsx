@@ -1,6 +1,9 @@
 import { can, requirePage, roleLabels } from '@/lib/permissions';
 import { AdminShell, type NavItem } from '@/components/admin/AdminShell';
 
+// Every admin page needs a signed-in user, so none should be attempted during the build.
+export const dynamic = 'force-dynamic';
+
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePage();
   const nav: NavItem[] = [

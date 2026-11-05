@@ -44,6 +44,9 @@ const nextConfig = {
   },
   experimental: {
     serverActions: { bodySizeLimit: '2mb' },
+    // Shared hosting limits threads: one worker per CPU core crashes the build there.
+    cpus: 1,
+    workerThreads: false,
   },
   async headers() {
     return [
