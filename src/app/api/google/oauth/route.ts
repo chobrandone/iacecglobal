@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { DRIVE_SCOPE_OAUTH, oauthClient } from '@/lib/drive/client';
+import { DRIVE_SCOPE_OAUTH, oauthClient, siteUrl } from '@/lib/drive/client';
 import { can, currentUser } from '@/lib/permissions';
 import { audit } from '@/lib/sponsorship/audit';
 import { encrypt } from '@/lib/sponsorship/encryption';
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   if (!user || !can(user.role, 'sponsorship-admin')) return new NextResponse(null, { status: 403 });
 
   const url = new URL(req.url);
-  const backups = new URL('/admin/sponsorship/backups', url.origin);
+  const backups = `${siteUrl()}/admin/sponsorship/backups`;
   const code = url.searchParams.get('code');
   const jar = await cookies();
 
@@ -25,7 +25,7 @@ export async function GET(req: Request) {
     if (url.searchParams.get('error')) return NextResponse.redirect(`${backups}?google=denied`);
     if (!process.env.GOOGLE_OAUTH_CLIENT_ID) return NextResponse.redirect(`${backups}?google=missing`);
     const state = randomBytes(16).toString('hex');
-    jar.set(COOKIE, state, { httpOnly: true, sameSite: 'lax', secure: url.protocol === 'https:', maxAge: 600, path: '/api/google' });
+    jar.set(COOKIE, state, { httpOnly: true, sameSite: 'lax', secure: siteUrl().startsWith('https:'), maxAge: 600, path: '/api/google' });
     return NextResponse.redirect(oauthClient().generateAuthUrl({ access_type: 'offline', prompt: 'consent', scope: [DRIVE_SCOPE_OAUTH], state }));
   }
 

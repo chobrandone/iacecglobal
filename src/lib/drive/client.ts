@@ -22,7 +22,10 @@ export type DriveApi = {
 
 export const authMode = () => (process.env.GOOGLE_AUTH_MODE === 'service_account' ? 'service_account' : 'oauth');
 
-export const oauthClient = () => new google.auth.OAuth2(process.env.GOOGLE_OAUTH_CLIENT_ID, process.env.GOOGLE_OAUTH_CLIENT_SECRET, `${(process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/$/, '')}/api/google/oauth`);
+/** The public address. Behind the host's proxy a request's own URL is an internal one such as 0.0.0.0:3000. */
+export const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || 'https://iacecglobal.com').replace(/\/$/, '');
+
+export const oauthClient = () => new google.auth.OAuth2(process.env.GOOGLE_OAUTH_CLIENT_ID, process.env.GOOGLE_OAUTH_CLIENT_SECRET, `${siteUrl()}/api/google/oauth`);
 
 const escape = (s: string) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
